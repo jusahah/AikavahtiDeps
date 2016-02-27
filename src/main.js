@@ -219,25 +219,70 @@ function createOneElement(name, color, depth) {
 // Building up manager
 var transformRunner = transformManager([
 {
-	name: 'test1',
-	prerequisite: null,
-	transform: function(data) {return 1}
+	name: 'sumUp',
+	prerequisite: 'minus3ToAll',
+	transform: function(data) {
+		return _.reduce(data, function(sum, num) {
+			return sum + num;
+		}, 0);
+	}
 
 },
 {
-	name: 'test2',
-	prerequisite: null,
-	transform: function(data) {return 2}
+	name: 'plus2ToAll',
+	prerequisite: 'minus3ToAll',
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num + 2;
+		})
+	}
 
 },
 {
-	name: 'test3',
+	name: 'minus3ToAll',
+	prerequisite: 'minus6ToAll',
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-3;
+		});
+	}
+
+}
+,
+{
+	name: 'minus4ToAll',
 	prerequisite: null,
-	transform: function(data) {return 3}
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-4;
+		});
+	}
+
+}
+,
+{
+	name: 'minus6ToAll',
+	prerequisite: 'minus7ToAll',
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-6;
+		});
+	}
+
+}
+,
+{
+	name: 'minus7ToAll',
+	prerequisite: null,
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-7;
+		});
+	}
 
 }
 
-], [1,2,3,4,5,7,8]);
+]);
 
 // Calling runAll with cb
 console.log("CALLING Runner");
@@ -246,7 +291,7 @@ transformRunner.runAll(function(name, results) {
 	console.log(name);
 	console.log(results);
 	console.warn("---------------------------");
-});
+}, [1,1,1,1,1,1]);
 
 
 

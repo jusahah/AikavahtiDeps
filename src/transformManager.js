@@ -30,12 +30,12 @@ module.exports = function(listOfTransforms, allDataFromDB) {
 	// They all are naturally handled the same here
 
 	// Init data structures
-	var allData = allDataFromDB; // Event data, settings, etc. Everything man can hope for.
+	var allData = allDataFromDB || []; // Event data, settings, etc. Everything man can hope for.
 	var transformsList = listOfTransforms; // Just for clarity make this initialization explicit
 	var transformsByName = initNameObject(listOfTransforms); // Init hashtable to transformer lookups
 
 	// Runtime state
-	var transformsReady = {}; //empty for now, to be filled as computation are performed. Will keep result sets in memory.
+	//var transformsReady = {}; //empty for now, to be filled as computation are performed. Will keep result sets in memory.
 
 	// Return public API
 	return {
@@ -71,8 +71,9 @@ module.exports = function(listOfTransforms, allDataFromDB) {
 		*/
 
 		// Return Promise
-		runAll: function(cbToSendResultsTo) {
-			transformBridge(transformsList, allData, cbToSendResultsTo);
+		runAll: function(cbToSendResultsTo, allDataAsArg) {
+			allDataAsArg = allDataAsArg || allData;
+			transformBridge(transformsList, allDataAsArg, cbToSendResultsTo);
 		}
 
 	}

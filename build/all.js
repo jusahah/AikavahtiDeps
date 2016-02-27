@@ -31754,25 +31754,70 @@ function createOneElement(name, color, depth) {
 // Building up manager
 var transformRunner = transformManager([
 {
-	name: 'test1',
-	prerequisite: null,
-	transform: function(data) {return 1}
+	name: 'sumUp',
+	prerequisite: 'minus3ToAll',
+	transform: function(data) {
+		return _.reduce(data, function(sum, num) {
+			return sum + num;
+		}, 0);
+	}
 
 },
 {
-	name: 'test2',
-	prerequisite: null,
-	transform: function(data) {return 2}
+	name: 'plus2ToAll',
+	prerequisite: 'minus3ToAll',
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num + 2;
+		})
+	}
 
 },
 {
-	name: 'test3',
+	name: 'minus3ToAll',
+	prerequisite: 'minus6ToAll',
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-3;
+		});
+	}
+
+}
+,
+{
+	name: 'minus4ToAll',
 	prerequisite: null,
-	transform: function(data) {return 3}
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-4;
+		});
+	}
+
+}
+,
+{
+	name: 'minus6ToAll',
+	prerequisite: 'minus7ToAll',
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-6;
+		});
+	}
+
+}
+,
+{
+	name: 'minus7ToAll',
+	prerequisite: null,
+	transform: function(data) {
+		return _.map(data, function(num) {
+			return num-7;
+		});
+	}
 
 }
 
-], [1,2,3,4,5,7,8]);
+]);
 
 // Calling runAll with cb
 console.log("CALLING Runner");
@@ -31781,7 +31826,7 @@ transformRunner.runAll(function(name, results) {
 	console.log(name);
 	console.log(results);
 	console.warn("---------------------------");
-});
+}, [1,1,1,1,1,1]);
 
 
 
@@ -31838,20 +31883,36 @@ module.exports = function(transformsList, data, cbToPipeResults) {
 
 // This is fake
 function fakeCalcAll(transformsList, data, batchID) {
+
+	var cachedResults = {}; // name -> results hashtable
 	console.log("Fake calc all");
-	function calcOne() {
+	function calcOne(transformSelected) {
+
 		var next;
 		if (transformsList.length !== 0) {
-			next = transformsList.pop();
-			// Fake apply here
-			// next.transform(data);
-			var results = data[Math.floor(data.length*Math.random())];
-			receiveResult(next.name, results, batchID);
-			setTimeout(calcOne, 250);
+			transformSelected = transformSelected || transformsList[0];
+			if (!transformSelected.prerequisite || cachedResults.hasOwnProperty(transformSelected.prerequisite)) {
+				// The dep for this one has been fulfilled -> just calc
+				next = transformsList.shift();
+				// Fake apply here
+				// next.transform(data);
+				console.log("RUNNING TRANSFORM: " + next.name);
+				var toBeSentData = transformSelected.prerequisite ? cachedResults[transformSelected.prerequisite] : data;
+				var results = next.transform(toBeSentData);
+				cachedResults[next.name] = results;
+				receiveResult(next.name, results, batchID);
+				setTimeout(calcOne, 250);
+			} else {
+				// Move the first element to last and try again
+				next = transformsList.shift();
+				transformsList.push(next); // Length does not change
+				setTimeout(calcOne, 250);
+			}			
+
 		}
 	}
 
-	calcOne();
+	calcOne(); // Start the timeout loop
 
 }
 },{"../dev/logging":6,"lodash":3}],9:[function(require,module,exports){
@@ -31887,12 +31948,12 @@ module.exports = function(listOfTransforms, allDataFromDB) {
 	// They all are naturally handled the same here
 
 	// Init data structures
-	var allData = allDataFromDB; // Event data, settings, etc. Everything man can hope for.
+	var allData = allDataFromDB || []; // Event data, settings, etc. Everything man can hope for.
 	var transformsList = listOfTransforms; // Just for clarity make this initialization explicit
 	var transformsByName = initNameObject(listOfTransforms); // Init hashtable to transformer lookups
 
 	// Runtime state
-	var transformsReady = {}; //empty for now, to be filled as computation are performed. Will keep result sets in memory.
+	//var transformsReady = {}; //empty for now, to be filled as computation are performed. Will keep result sets in memory.
 
 	// Return public API
 	return {
@@ -31928,8 +31989,9 @@ module.exports = function(listOfTransforms, allDataFromDB) {
 		*/
 
 		// Return Promise
-		runAll: function(cbToSendResultsTo) {
-			transformBridge(transformsList, allData, cbToSendResultsTo);
+		runAll: function(cbToSendResultsTo, allDataAsArg) {
+			allDataAsArg = allDataAsArg || allData;
+			transformBridge(transformsList, allDataAsArg, cbToSendResultsTo);
 		}
 
 	}

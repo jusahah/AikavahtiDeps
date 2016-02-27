@@ -49,19 +49,35 @@ module.exports = function(transformsList, data, cbToPipeResults) {
 
 // This is fake
 function fakeCalcAll(transformsList, data, batchID) {
+
+	var cachedResults = {}; // name -> results hashtable
 	console.log("Fake calc all");
-	function calcOne() {
+	function calcOne(transformSelected) {
+
 		var next;
 		if (transformsList.length !== 0) {
-			next = transformsList.pop();
-			// Fake apply here
-			// next.transform(data);
-			var results = data[Math.floor(data.length*Math.random())];
-			receiveResult(next.name, results, batchID);
-			setTimeout(calcOne, 250);
+			transformSelected = transformSelected || transformsList[0];
+			if (!transformSelected.prerequisite || cachedResults.hasOwnProperty(transformSelected.prerequisite)) {
+				// The dep for this one has been fulfilled -> just calc
+				next = transformsList.shift();
+				// Fake apply here
+				// next.transform(data);
+				console.log("RUNNING TRANSFORM: " + next.name);
+				var toBeSentData = transformSelected.prerequisite ? cachedResults[transformSelected.prerequisite] : data;
+				var results = next.transform(toBeSentData);
+				cachedResults[next.name] = results;
+				receiveResult(next.name, results, batchID);
+				setTimeout(calcOne, 250);
+			} else {
+				// Move the first element to last and try again
+				next = transformsList.shift();
+				transformsList.push(next); // Length does not change
+				setTimeout(calcOne, 250);
+			}			
+
 		}
 	}
 
-	calcOne();
+	calcOne(); // Start the timeout loop
 
 }
