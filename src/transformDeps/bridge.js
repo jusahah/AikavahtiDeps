@@ -49,6 +49,7 @@ module.exports = function(transformsList, data, cbToPipeResults) {
 
 // This is fake
 // Well, actually not anymore it isnt. Now it is the real deal. Just ship it to another process.
+// Adn remove timeouts, of course
 function fakeCalcAll(transformsList, data, batchID) {
 
 	var cachedResults = {}; // name -> results hashtable
