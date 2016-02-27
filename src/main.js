@@ -1,6 +1,9 @@
 var jQuery = require('jquery');
 var tinycolor = require('tinycolor2');
 var colorAssigner = require('./colorassigner');
+
+//Transformer deps
+var transformManager = require('./transformManager');
 /*
 var coloredTree = colorAssigner([
 
@@ -204,4 +207,46 @@ function buildSubtree(coloredTree, depth) {
 function createOneElement(name, color, depth) {
 	return "<div style='background-color: " + color + "; margin-left: " + (depth * 20) + "px';>" + name + "</div>";
 }
+
+
+
+
+
+
+
+/// Transformer part
+
+// Building up manager
+var transformRunner = transformManager([
+{
+	name: 'test1',
+	prerequisite: null,
+	transform: function(data) {return 1}
+
+},
+{
+	name: 'test2',
+	prerequisite: null,
+	transform: function(data) {return 2}
+
+},
+{
+	name: 'test3',
+	prerequisite: null,
+	transform: function(data) {return 3}
+
+}
+
+], [1,2,3,4,5,7,8]);
+
+// Calling runAll with cb
+console.log("CALLING Runner");
+transformRunner.runAll(function(name, results) {
+	console.warn("-------RESULT BACK---------");
+	console.log(name);
+	console.log(results);
+	console.warn("---------------------------");
+});
+
+
 

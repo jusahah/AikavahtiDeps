@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.3.3",
     "jquery": "^2.2.1",
     "lodash": "^4.5.1",
     "tinycolor": "0.0.1",
